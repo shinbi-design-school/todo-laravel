@@ -1,0 +1,50 @@
+services:
+  web:
+    container_name: todo-laravel-web
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/opt
+    environment:
+      TZ: Asia/Tokyo
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    container_name: todo-laravel-db
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: laravel
+      MYSQL_ROOT_PASSWORD: root
+      TZ: Asia/Tokyo
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -proot --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  phpmyadmin:
+    container_name: todo-laravel-pma
+    image: phpmyadmin/phpmyadmin:5
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: laravel
+      PMA_PASSWORD: laravel
+      TZ: Asia/Tokyo
+    depends_on:
+      - db
+
+volumes:
+  db_data:
